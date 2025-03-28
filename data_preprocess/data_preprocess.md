@@ -1,6 +1,5 @@
 #Data Preprocessing Tool
 
-This tool is designed for the PFLO (Pose Estimation Model of Field Maize Based on YOLO Architecture) project, used for processing annotation data and generating suitable inputs for training YOLO architecture models.
 
 ## Overview
 
