@@ -153,7 +153,4 @@ The preprocessing significantly reduces annotation variability, providing consis
 - Interpolation method: Use linear interpolation between adjacent points to increase the number of intermediate points
 - Standardization: Keep the final number of keypoints consistent for easier model training
 
-## Related Links
 
-- PFLO project: https://github.com/Akacaesarp/PFLO
-- Dataset: http://phenomics.agis.org.cn/#/category (MIPDB database)
