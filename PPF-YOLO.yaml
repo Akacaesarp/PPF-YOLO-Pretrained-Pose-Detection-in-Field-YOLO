@@ -1,0 +1,51 @@
+nc: 80 # number of classes
+kpt_shape: [10, 3]
+scales: # model compound scaling constants, i.e. 'model=yolo11n.yaml' will call yolo11.yaml with scale 'n'
+  x: [1.00, 1.50, 512] # summary: 631 layers, 56966176 parameters, 56966160 gradients, 196.0 GFLOPs
+# YOLO11n backbone
+backbone:
+  # [from, repeats, module, args]
+  - [-1, 1, Conv, [64, 3, 2]] # 0-P1/2
+  - [-1, 1, Conv, [128, 3, 2]] # 1-P2/4
+  - [-1, 2, C3k2_iAFF, [256, True, 0.25]]
+  - [-1, 1, Conv, [256, 3, 2]] # 3-P3/8
+  - [-1, 2, C3k2_iAFF, [512, True, 0.25]]
+  - [-1, 1, Conv, [512, 3, 2]] # 5-P4/16
+  - [-1, 2, C3k2_iAFF, [512, True]]
+  - [-1, 1, Conv, [768, 3, 2]] # 7-P5/32
+  - [-1, 2, C3k2_iAFF, [768, True]]
+  - [-1, 1, Conv, [1024, 3, 2]] # 9-P6/64
+  - [-1, 2, C3k2_iAFF, [1024, True]]
+  - [-1, 1, SPPF, [1024, 5]] # 11
+
+# YOLOv11.0x6 head
+head:
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]
+  - [[-1, 8], 1, Concat, [1]] # cat backbone P5
+  - [-1, 2, C3k2_iAFF, [256, True]] # 14
+
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]
+  - [[-1, 6], 1, Concat, [1]] # cat backbone P4
+  - [-1, 2, C3k2_iAFF, [256, True]] # 17
+
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]
+  - [[-1, 4], 1, Concat, [1]] # cat backbone P3
+  - [-1, 2, C3k2_iAFF, [256, True]] # 20 (P3/8-small)
+  - [-1, 1, MLCA, []] # 21 (P3/8-small)  小目标检测层输出位置增加注意力机制
+
+
+  - [-1, 1, Conv, [256, 3, 2]]
+  - [[-1, 17], 1, Concat, [1]] # cat head P4
+  - [-1, 2, C3k2_iAFF, [256, True]] # 24 (P4/16-medium)
+  - [-1, 1, MLCA, []] # 25 (P3/8-small)  小目标检测层输出位置增加注意力机制
+
+
+  - [-1, 1, Conv, [512, 3, 2]]
+  - [[-1, 14], 1, Concat, [1]] # cat head P5
+  - [-1, 2, C3k2_iAFF, [256, True]] # 28 (P5/32-large)
+
+  - [-1, 1, Conv, [256, 3, 2]]
+  - [[-1, 11], 1, Concat, [1]] # cat head P6
+  - [-1, 2, C3k2_iAFF, [256, True]] # 31 (P6/64-xlarge)  # True也可设置True尝试.
+
+  - [[21, 25, 28, 31], 1, DynamicPose, [nc, kpt_shape]] # Detect(P3, P4, P5, P6)
